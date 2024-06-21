@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "612958375767",
+    "project_id": "cityguide-app-666a5",
+    "storage_bucket": "cityguide-app-666a5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612958375767:android:e5722fc813bb59ace63812",
+        "android_client_info": {
+          "package_name": "com.example.jobe_o_project6"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9ZCJoIu3A9GzndTJhlwrmdbxB4hlUyzc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612958375767:android:14a9865e384bb673e63812",
+        "android_client_info": {
+          "package_name": "com.example.jobe_oboly_a_finalproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9ZCJoIu3A9GzndTJhlwrmdbxB4hlUyzc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
