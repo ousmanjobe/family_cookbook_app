@@ -7,7 +7,7 @@ Our Remote Family Cookbook App is designed to allow multiple users to maintain a
 
 How to Run:
 
-- Clone the repository and open the project in Android Studio.
+- Clone the repository and open the project in Android Studio. (master branch)
 - Configure Firebase with your project credentials.
 - Sync the project with Gradle files.
 - Run the app on an emulator or physical device.
