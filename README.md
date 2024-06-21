@@ -62,3 +62,13 @@ Displays the username.
 
 Allows toggling between light and dark themes.
 "Return" button to navigate back to the Profile Screen.
+
+
+TO-DO:
+- Implement phototaking function
+- implement favoriteToggle function
+- fix registration
+- Enable limited multiple user access based on family size
+- Fix page navigation fluidity
+- Continue fixing data management
+
