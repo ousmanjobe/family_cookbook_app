@@ -64,7 +64,6 @@ public class RecipeDetailActivity extends AppCompatActivity {
         recipeDurationTextView.setText(recipe.getDuration());
         recipeIngredientsTextView.setText(recipe.getIngredients());
         recipeInstructionsTextView.setText(recipe.getInstructions());
-        // Load image with Glide or other library
     }
 
     private void takePhoto() {
