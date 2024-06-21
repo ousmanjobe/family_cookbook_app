@@ -14,5 +14,20 @@ public class UserPreferencesEntity {
         this.isDarkTheme = isDarkTheme;
     }
 
-    // Getters and setters
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public boolean isDarkTheme() {
+        return isDarkTheme;
+    }
+
+    public void setDarkTheme(boolean darkTheme) {
+        isDarkTheme = darkTheme;
+    }
 }
