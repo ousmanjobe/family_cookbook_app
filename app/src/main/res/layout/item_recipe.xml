@@ -3,20 +3,20 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/recipeNameTextView"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Recipe Name"
         android:textSize="18sp"
-        android:textStyle="bold"
-        android:text="Recipe Name"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/recipeDurationTextView"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:text="Recipe Duration"/>
+        android:text="Duration"
+        android:textSize="14sp" />
 </LinearLayout>

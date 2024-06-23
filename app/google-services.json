@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "612958375767",
-    "project_id": "cityguide-app-666a5",
-    "storage_bucket": "cityguide-app-666a5.appspot.com"
+    "project_number": "655946676328",
+    "project_id": "custom-octagon-425601-q3",
+    "storage_bucket": "custom-octagon-425601-q3.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:612958375767:android:e5722fc813bb59ace63812",
+        "mobilesdk_app_id": "1:655946676328:android:11cdff8d56cec216b663dd",
         "android_client_info": {
           "package_name": "com.example.jobe_o_project6"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA9ZCJoIu3A9GzndTJhlwrmdbxB4hlUyzc"
+          "current_key": "AIzaSyAHWEkFfYBTSRMB3Gm91R1movbbVQf-igU"
         }
       ],
       "services": {
@@ -26,7 +26,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:612958375767:android:14a9865e384bb673e63812",
+        "mobilesdk_app_id": "1:655946676328:android:f687897512b3683db663dd",
         "android_client_info": {
           "package_name": "com.example.jobe_oboly_a_finalproject"
         }
@@ -34,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA9ZCJoIu3A9GzndTJhlwrmdbxB4hlUyzc"
+          "current_key": "AIzaSyAHWEkFfYBTSRMB3Gm91R1movbbVQf-igU"
         }
       ],
       "services": {

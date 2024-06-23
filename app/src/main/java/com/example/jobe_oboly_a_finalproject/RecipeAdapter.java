@@ -10,17 +10,23 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder>{
+public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> {
     private List<Recipe> recipes;
-    private OnRecipeClickListener listener;
+    private OnRecipeClickListener clickListener;
+    private OnRecipeLongClickListener longClickListener;
 
     public interface OnRecipeClickListener {
         void onRecipeClick(Recipe recipe);
     }
 
-    public RecipeAdapter(List<Recipe> recipes, OnRecipeClickListener listener) {
+    public interface OnRecipeLongClickListener {
+        void onRecipeLongClick(Recipe recipe);
+    }
+
+    public RecipeAdapter(List<Recipe> recipes, OnRecipeClickListener clickListener, OnRecipeLongClickListener longClickListener) {
         this.recipes = recipes;
-        this.listener = listener;
+        this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
     }
 
     @NonNull
@@ -33,7 +39,7 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
     @Override
     public void onBindViewHolder(@NonNull RecipeViewHolder holder, int position) {
         Recipe recipe = recipes.get(position);
-        holder.bind(recipe, listener);
+        holder.bind(recipe, clickListener, longClickListener);
     }
 
     @Override
@@ -50,10 +56,14 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
             recipeDurationTextView = itemView.findViewById(R.id.recipeDurationTextView);
         }
 
-        public void bind(Recipe recipe, OnRecipeClickListener listener) {
+        public void bind(Recipe recipe, OnRecipeClickListener clickListener, OnRecipeLongClickListener longClickListener) {
             recipeNameTextView.setText(recipe.getName());
             recipeDurationTextView.setText(recipe.getDuration());
-            itemView.setOnClickListener(v -> listener.onRecipeClick(recipe));
+            itemView.setOnClickListener(v -> clickListener.onRecipeClick(recipe));
+            itemView.setOnLongClickListener(v -> {
+                longClickListener.onRecipeLongClick(recipe);
+                return true;
+            });
         }
     }
 }

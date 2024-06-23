@@ -1,6 +1,7 @@
 package com.example.jobe_oboly_a_finalproject;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -8,31 +9,29 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class RecipeListActivity extends AppCompatActivity {
+
+    private static final int REQUEST_CODE_RECIPE_DETAIL = 1;
 
     private EditText recipeNameEditText;
     private Button addRecipeButton;
     private RecyclerView recipesRecyclerView;
     private RecipeAdapter adapter;
-    private FirebaseFirestore db;
+    private AppDatabase db;
     private FirebaseAuth mAuth;
     private List<Recipe> recipes;
 
@@ -46,9 +45,9 @@ public class RecipeListActivity extends AppCompatActivity {
         recipesRecyclerView = findViewById(R.id.recipesRecyclerView);
         recipesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         recipes = new ArrayList<>();
-        adapter = new RecipeAdapter(recipes, this::onRecipeClick);
+        adapter = new RecipeAdapter(recipes, this::onRecipeClick, this::onRecipeLongClick);
         recipesRecyclerView.setAdapter(adapter);
-        db = FirebaseFirestore.getInstance();
+        db = AppDatabase.getInstance(this);
         mAuth = FirebaseAuth.getInstance();
 
         findViewById(R.id.homeButton).setOnClickListener(v -> startActivity(new Intent(RecipeListActivity.this, HomePageActivity.class)));
@@ -58,10 +57,14 @@ public class RecipeListActivity extends AppCompatActivity {
         loadRecipes();
     }
 
-    private void onRecipeClick(Recipe recipe){
+    private void onRecipeClick(Recipe recipe) {
         Intent intent = new Intent(this, RecipeDetailActivity.class);
         intent.putExtra("recipe", (Serializable) recipe);
-        startActivity(intent);
+        startActivityForResult(intent, REQUEST_CODE_RECIPE_DETAIL);
+    }
+
+    private void onRecipeLongClick(Recipe recipe) {
+        // Handle long click action
     }
 
     private void showAddRecipeDialog() {
@@ -72,15 +75,8 @@ public class RecipeListActivity extends AppCompatActivity {
         EditText durationEditText = view.findViewById(R.id.recipeDurationEditText);
         EditText ingredientsEditText = view.findViewById(R.id.recipeIngredientsEditText);
         EditText instructionsEditText = view.findViewById(R.id.recipeInstructionsEditText);
-
-        Button cancelButton = view.findViewById(R.id.cancelButton);
         Button confirmButton = view.findViewById(R.id.confirmButton);
-
-        // Handle Cancel button
-        cancelButton.setOnClickListener(v -> {
-            // Dismiss the dialog
-            builder.create().dismiss();
-        });
+        Button cancelButton = view.findViewById(R.id.cancelButton);
 
         // Handle Confirm button
         confirmButton.setOnClickListener(v -> {
@@ -93,9 +89,8 @@ public class RecipeListActivity extends AppCompatActivity {
 
             // Validate input (example: check if recipeName is not empty)
             if (!TextUtils.isEmpty(recipeName)) {
-                // Call method to add recipe to Firebase or Room database
+                // Call method to add recipe to Room database
                 addRecipe(recipeName, description, duration, ingredients, instructions);
-
                 // Dismiss the dialog
                 builder.create().dismiss();
             } else {
@@ -103,57 +98,55 @@ public class RecipeListActivity extends AppCompatActivity {
             }
         });
 
-        if (!recipeNameEditText.getText().toString().isEmpty()) {
-            nameEditText.setText(recipeNameEditText.getText().toString());
-        }
+        // Handle Cancel button
+        cancelButton.setOnClickListener(v -> builder.create().dismiss());
 
         builder.setView(view)
                 .setTitle("Add Recipe")
-                .setPositiveButton("Add", (dialog, which) -> {
-                    String name = nameEditText.getText().toString().trim();
-                    String description = descriptionEditText.getText().toString().trim();
-                    String duration = durationEditText.getText().toString().trim();
-                    String ingredients = ingredientsEditText.getText().toString().trim();
-                    String instructions = instructionsEditText.getText().toString().trim();
-
-                    if (name.isEmpty() || description.isEmpty() || duration.isEmpty() || ingredients.isEmpty() || instructions.isEmpty()) {
-                        Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    addRecipe(name, description, duration, ingredients, instructions);
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .create()
                 .show();
     }
 
     private void addRecipe(String name, String description, String duration, String ingredients, String instructions) {
-        String userId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
-        Recipe recipe = new Recipe(name, description, duration, ingredients, instructions);
-        db.collection("users").document(userId).collection("recipes").add(recipe)
-                .addOnSuccessListener(documentReference -> {
-                    recipes.add(recipe);
-                    adapter.notifyDataSetChanged();
-                    Toast.makeText(this, "Recipe added successfully", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> Toast.makeText(this, "Failed to add recipe", Toast.LENGTH_SHORT).show());
+        Recipe recipe = new Recipe(
+                UUID.randomUUID().toString(),
+                name,
+                description,
+                duration,
+                ingredients,
+                instructions,
+                "",
+                false,
+                false,
+                0L,
+                Objects.requireNonNull(mAuth.getCurrentUser()).getUid()
+        );
+
+        AsyncTask.execute(() -> {
+            db.recipeDao().insertRecipe(recipe.toEntity());
+            loadRecipes();
+        });
     }
 
     private void loadRecipes() {
         String userId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
-        db.collection("users").document(userId).collection("recipes")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            Recipe recipe = document.toObject(Recipe.class);
-                            recipes.add(recipe);
-                        }
-                        adapter.notifyDataSetChanged();
-                    } else {
-                        Toast.makeText(this, "Failed to load recipes", Toast.LENGTH_SHORT).show();
-                    }
-                });
+        AsyncTask.execute(() -> {
+            List<RecipeEntity> recipeEntities = db.recipeDao().getAllRecipes(userId);
+            runOnUiThread(() -> {
+                recipes.clear();
+                for (RecipeEntity entity : recipeEntities) {
+                    recipes.add(Recipe.fromEntity(entity));
+                }
+                adapter.notifyDataSetChanged();
+            });
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_RECIPE_DETAIL && resultCode == RESULT_OK) {
+            loadRecipes();
+        }
     }
 }

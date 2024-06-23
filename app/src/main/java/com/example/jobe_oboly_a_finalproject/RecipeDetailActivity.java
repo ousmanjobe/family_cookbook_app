@@ -1,20 +1,16 @@
 package com.example.jobe_oboly_a_finalproject;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Objects;
 
@@ -24,8 +20,8 @@ public class RecipeDetailActivity extends AppCompatActivity {
     private ImageView recipeImageView;
     private Button favoriteButton, removeButton, returnButton, cameraButton;
     private Recipe recipe;
-    private FirebaseFirestore db;
     private FirebaseAuth mAuth;
+    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +39,7 @@ public class RecipeDetailActivity extends AppCompatActivity {
         returnButton = findViewById(R.id.returnButton);
         cameraButton = findViewById(R.id.cameraButton);
 
-        db = FirebaseFirestore.getInstance();
+        db = AppDatabase.getInstance(this);
         mAuth = FirebaseAuth.getInstance();
 
         // Retrieve recipe from intent
@@ -71,18 +67,21 @@ public class RecipeDetailActivity extends AppCompatActivity {
     }
 
     private void toggleFavorite() {
-        // Implement favorite/unfavorite functionality
+        recipe.setFavorite(!recipe.isFavorite());
+        AsyncTask.execute(() -> db.recipeDao().updateRecipe(recipe.toEntity()));
+        String message = recipe.isFavorite() ? "Recipe added to favorites" : "Recipe removed from favorites";
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void removeRecipe() {
-        String userId = Objects.requireNonNull(mAuth.getCurrentUser()).getUid();
-        db.collection("users").document(userId).collection("recipes").document(recipe.getId())
-                .delete()
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Recipe removed", Toast.LENGTH_SHORT).show();
-                    finish();
-                })
-                .addOnFailureListener(e -> Toast.makeText(this, "Failed to remove recipe", Toast.LENGTH_SHORT).show());
+        AsyncTask.execute(() -> {
+            db.recipeDao().deleteRecipe(recipe.toEntity());
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Recipe removed", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+            });
+        });
     }
 
     private void returnToRecipeList() {

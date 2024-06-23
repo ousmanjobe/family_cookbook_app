@@ -35,12 +35,12 @@ android {
 dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-analytics")
-
     implementation("com.google.firebase:firebase-auth:21.2.0")
     implementation("com.google.firebase:firebase-firestore-ktx:24.7.1")
 
     implementation("androidx.room:room-runtime:2.5.1")
     implementation("androidx.room:room-ktx:2.5.1")
+    annotationProcessor("androidx.room:room-compiler:2.5.1")
 
     implementation(libs.appcompat)
     implementation(libs.material)
