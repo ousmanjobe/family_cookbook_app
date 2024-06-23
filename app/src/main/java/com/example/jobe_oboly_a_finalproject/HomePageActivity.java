@@ -20,6 +20,8 @@ import java.util.Objects;
 
 public class HomePageActivity extends AppCompatActivity {
 
+    private static final int REQUEST_CODE_RECIPE_DETAIL = 1;
+
     private RecyclerView favoritesRecyclerView;
     private RecipeAdapter adapter;
     private FirebaseAuth mAuth;
@@ -50,7 +52,7 @@ public class HomePageActivity extends AppCompatActivity {
     private void onRecipeClick(Recipe recipe) {
         Intent intent = new Intent(this, RecipeDetailActivity.class);
         intent.putExtra("recipe", (Serializable) recipe);
-        startActivity(intent);
+        startActivityForResult(intent, REQUEST_CODE_RECIPE_DETAIL);
     }
 
     private void onRecipeLongClick(Recipe recipe) {
@@ -86,5 +88,13 @@ public class HomePageActivity extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
             });
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_RECIPE_DETAIL && resultCode == RESULT_OK) {
+            loadFavoriteRecipes();
+        }
     }
 }

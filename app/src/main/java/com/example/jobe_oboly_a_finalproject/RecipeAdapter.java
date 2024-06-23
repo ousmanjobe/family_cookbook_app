@@ -3,6 +3,7 @@ package com.example.jobe_oboly_a_finalproject;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -49,16 +50,20 @@ public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeView
 
     static class RecipeViewHolder extends RecyclerView.ViewHolder {
         private TextView recipeNameTextView, recipeDurationTextView;
+        private ImageView favoriteIconImageView;
 
         public RecipeViewHolder(@NonNull View itemView) {
             super(itemView);
             recipeNameTextView = itemView.findViewById(R.id.recipeNameTextView);
             recipeDurationTextView = itemView.findViewById(R.id.recipeDurationTextView);
+            favoriteIconImageView = itemView.findViewById(R.id.favoriteIconImageView);
         }
 
         public void bind(Recipe recipe, OnRecipeClickListener clickListener, OnRecipeLongClickListener longClickListener) {
             recipeNameTextView.setText(recipe.getName());
             recipeDurationTextView.setText(recipe.getDuration());
+            favoriteIconImageView.setVisibility(recipe.isFavorite() ? View.VISIBLE : View.GONE);
+
             itemView.setOnClickListener(v -> clickListener.onRecipeClick(recipe));
             itemView.setOnLongClickListener(v -> {
                 longClickListener.onRecipeLongClick(recipe);

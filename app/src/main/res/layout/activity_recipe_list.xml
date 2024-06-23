@@ -7,11 +7,15 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <EditText
-        android:id="@+id/recipeNameEditText"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/addRecipeLabel"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="Recipe Name" />
+        android:text="Add Your Recipe!"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:paddingBottom="8dp"
+        android:layout_gravity="center_horizontal" />
 
     <Button
         android:id="@+id/addRecipeButton"
@@ -36,6 +40,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Profile" />
-
 
 </LinearLayout>
