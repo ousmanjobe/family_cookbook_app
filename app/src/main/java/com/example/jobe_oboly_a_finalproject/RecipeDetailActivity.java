@@ -4,39 +4,38 @@ import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 
 public class RecipeDetailActivity extends AppCompatActivity {
 
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private static final int REQUEST_CAMERA_PERMISSION = 2;
-
     private TextView recipeNameTextView, recipeDescriptionTextView, recipeDurationTextView, recipeIngredientsTextView, recipeInstructionsTextView;
     private ImageView recipeImageView;
-    private Button favoriteButton, removeButton, returnButton, cameraButton;
+    private Button favoriteButton, removeButton, returnButton, cameraButton, shareButton;
     private Recipe recipe;
     private FirebaseAuth mAuth;
     private AppDatabase db;
-
-    private Uri photoURI;
+    private Uri photoUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +52,7 @@ public class RecipeDetailActivity extends AppCompatActivity {
         removeButton = findViewById(R.id.removeButton);
         returnButton = findViewById(R.id.returnButton);
         cameraButton = findViewById(R.id.cameraButton);
+        shareButton = findViewById(R.id.shareButton);
 
         db = AppDatabase.getInstance(this);
         mAuth = FirebaseAuth.getInstance();
@@ -63,12 +63,11 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
         displayRecipeDetails();
 
-        cameraButton.setOnClickListener(v -> checkCameraPermission());
+        cameraButton.setOnClickListener(v -> takePhoto());
         favoriteButton.setOnClickListener(v -> toggleFavorite());
         removeButton.setOnClickListener(v -> removeRecipe());
         returnButton.setOnClickListener(v -> returnToRecipeList());
-
-        updateFavoriteButton();
+        shareButton.setOnClickListener(v -> shareRecipe());
     }
 
     private void displayRecipeDetails() {
@@ -79,66 +78,70 @@ public class RecipeDetailActivity extends AppCompatActivity {
         recipeInstructionsTextView.setText(recipe.getInstructions());
 
         if (recipe.getImageUrl() != null && !recipe.getImageUrl().isEmpty()) {
+            recipeImageView.setVisibility(View.VISIBLE);
             recipeImageView.setImageURI(Uri.parse(recipe.getImageUrl()));
-        }
-    }
-
-    private void checkCameraPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
         } else {
-            takePhoto();
+            recipeImageView.setVisibility(View.GONE);
         }
-    }
 
-    private void takePhoto() {
-        ContentValues values = new ContentValues();
-        values.put(MediaStore.Images.Media.TITLE, "New Picture");
-        values.put(MediaStore.Images.Media.DESCRIPTION, "From your Camera");
-        photoURI = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            if (photoURI != null) {
-                recipeImageView.setImageURI(photoURI);
-                recipe.setImageUrl(photoURI.toString());
-
-                AsyncTask.execute(() -> db.recipeDao().updateRecipe(recipe.toEntity()));
-                Toast.makeText(this, "Photo saved", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CAMERA_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                takePhoto();
-            } else {
-                Toast.makeText(this, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void toggleFavorite() {
-        recipe.setFavorite(!recipe.isFavorite());
-        AsyncTask.execute(() -> db.recipeDao().updateRecipe(recipe.toEntity()));
-        String message = recipe.isFavorite() ? "Recipe added to favorites" : "Recipe removed from favorites";
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         updateFavoriteButton();
-        setResult(RESULT_OK); // Notify HomePageActivity of the change
     }
 
     private void updateFavoriteButton() {
         favoriteButton.setText(recipe.isFavorite() ? "Unfavorite" : "Favorite");
+    }
+
+    private void takePhoto() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+        } else {
+            openCamera();
+        }
+    }
+
+    private void openCamera() {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, "New Picture");
+        values.put(MediaStore.Images.Media.DESCRIPTION, "From your Camera");
+        photoUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+        cameraLauncher.launch(intent);
+    }
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    openCamera();
+                } else {
+                    Toast.makeText(this, "Camera permission is required to take photos", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    private final ActivityResultLauncher<Intent> cameraLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    try {
+                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), photoUri);
+                        recipeImageView.setImageBitmap(bitmap);
+                        recipeImageView.setVisibility(View.VISIBLE);
+                        recipe.setImageUrl(photoUri.toString());
+                        AsyncTask.execute(() -> db.recipeDao().updateRecipe(recipe.toEntity()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+    private void toggleFavorite() {
+        recipe.setFavorite(!recipe.isFavorite());
+        AsyncTask.execute(() -> {
+            db.recipeDao().updateRecipe(recipe.toEntity());
+            runOnUiThread(this::updateFavoriteButton);
+        });
+        String message = recipe.isFavorite() ? "Recipe added to favorites" : "Recipe removed from favorites";
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private void removeRecipe() {
@@ -154,5 +157,27 @@ public class RecipeDetailActivity extends AppCompatActivity {
 
     private void returnToRecipeList() {
         finish();
+    }
+
+    private void shareRecipe() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+
+        String shareSubject = "Check out this recipe: " + recipe.getName();
+        String shareBody = "Recipe Name: " + recipe.getName() + "\n\n"
+                + "Description: " + recipe.getDescription() + "\n\n"
+                + "Duration: " + recipe.getDuration() + "\n\n"
+                + "Ingredients: " + recipe.getIngredients() + "\n\n"
+                + "Instructions: " + recipe.getInstructions();
+
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, shareSubject);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareBody);
+
+        if (recipe.getImageUrl() != null && !recipe.getImageUrl().isEmpty()) {
+            shareIntent.setType("image/*");
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(recipe.getImageUrl()));
+        }
+
+        startActivity(Intent.createChooser(shareIntent, "Share Recipe"));
     }
 }
